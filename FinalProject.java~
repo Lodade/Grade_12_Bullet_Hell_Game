@@ -1,0 +1,1031 @@
+/*Final Project
+ * Date: June 13,2016
+ * By: Jacob Wagner
+ * This program is meant to be a 2d player shooting game where you go through levels and at the
+ * end you get to a boss where if you beat him you win the game. The controls consist of WASD to move the player
+ * and mouse click where you want the character to shoot their shot.
+ */
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+public class FinalProject//The main class 
+{
+  public static JFrame mainpage;//Creates the jframe
+  public static GameScreen game;//Creates the GameScreen
+  public static void main(String[] args)//Sets up the base jframe and game jpanel 
+  {
+    mainpage=new JFrame("Game");
+    mainpage.setSize(1200,858);
+    mainpage.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    game=new GameScreen();
+    mainpage.add(game);
+    mainpage.setVisible(true);
+  }
+}
+class enemyAndShotMover implements ActionListener//Class which controls the normal enemies shots and moving
+{
+  public void actionPerformed(ActionEvent e)//actionPerformed method
+  {
+    GameScreen.enemyMoves();
+    GameScreen.enemyMoves();
+    GameScreen.enemyMoves();
+    GameScreen.enemyMoves();
+    GameScreen.shotMoves();
+    GameScreen.shotMoves();
+    GameScreen.shotMoves();
+    GameScreen.shotMoves();
+    GameScreen.shotMoves();
+    GameScreen.shotMoves();
+  }
+}
+class bossController implements ActionListener//Class which controls the boss shots and moving
+{
+ public void actionPerformed(ActionEvent e)//actionPerformed method
+ {
+   GameScreen.bossShots();
+   GameScreen.bossShots();
+   GameScreen.bossShots();
+   GameScreen.bossShots();
+   GameScreen.bossShots();
+   GameScreen.bossShots();
+   GameScreen.bossShots();
+   GameScreen.bossShots();
+   GameScreen.bossMoves();
+   GameScreen.bossMoves();
+   GameScreen.bossMoves();
+ }
+}
+class detecter implements ActionListener//Class which controls the hit detection of the boss, player and enemies
+{
+ public void actionPerformed(ActionEvent e)//actionPerformed method
+ {
+  GameScreen.hitdetect(); 
+  GameScreen.bossdetect();
+ }
+}
+class healing implements ActionListener//Class which controls the healing of the player 
+{
+ public void actionPerformed(ActionEvent e)//actionPerformed method
+ {
+  GameScreen.heal(); 
+ }
+}
+class GameScreen extends JPanel implements MouseListener,KeyListener,ActionListener//Class which houses the Jpanel and Listeners
+{
+  //int declarations
+  public static int charX=578;
+  public static int charY=395;
+  public static int mouseX=0;
+  public static int mouseY=0;
+  //boolean declarations
+  public static boolean shoot=false;
+  public static boolean right=false;
+  public static boolean left=false;
+  public static boolean up=false;
+  public static boolean down=false;
+  public static boolean frontmenu=true;
+  public static boolean maingame=false; 
+  public static boolean gameover=false;
+  public static boolean playershoot=false;
+  public static boolean fighting=false;
+  public static boolean spawn=true;
+  public static boolean bossroom=false;
+  public static boolean win=false;
+  //int declarations
+  public static int roomscleared=6;
+  public static int first=0;
+  public static int charhealth=300;
+  public static int dmgtoplayer=20;
+  public static int go=0;
+  public static int score=0;
+  public static int bossX;
+  public static int bossY;
+  public static int bosshealth=2000;
+  //object and int arrays declarations
+  public static PlayerShot shots[]=new PlayerShot[8];
+  public static Enemy enemies[]=new Enemy[8];
+  public static int[] enemyhealth=new int[8];
+  public static int[] enemyX=new int[8];
+  public static int[] enemyY=new int[8];
+  public static int[] enemyshotsX=new int[8];
+  public static int[] enemyshotsY=new int[8];
+  public static int[] enemyshotscurX=new int[8];
+  public static int[] enemyshotscurY=new int[8];
+  public static EnemyShot eshots[]=new EnemyShot[8]; 
+  public static EnemyShot bossshots[]=new EnemyShot[5];
+  public static int bossshotsX[]=new int[5];
+  public static int bossshotsY[]=new int[5];
+  public static int bossshotscurX[]=new int[5];
+  public static int bossshotscurY[]=new int[5];
+  //JLabel declarations
+  JLabel title=new JLabel("Adventure Realm");
+  JLabel Over=new JLabel("Game Over");
+  JLabel MainMenu=new JLabel("Main Menu");
+  JLabel start=new JLabel("Start");
+  JLabel instruct=new JLabel("Instructions");
+  JLabel scores=new JLabel();
+  JLabel showX=new JLabel();
+  JLabel showY=new JLabel();
+  JLabel mouseX2=new JLabel();
+  JLabel mouseY2=new JLabel();
+  //Timer declarations
+  Timer charmover=new Timer(1000/100,this);
+  enemyAndShotMover moveme=new enemyAndShotMover();
+  Timer enemymover=new Timer(1000/100,moveme);
+  detecter detects=new detecter();
+  Timer hitdetection=new Timer(100,detects);
+  healing heals=new healing();
+  Timer healhim=new Timer(200,heals);
+  bossController bossgo=new bossController();
+  Timer bossrun=new Timer(1000/100,bossgo);
+  public void actionPerformed(ActionEvent z)//actionPerformed method
+  {
+    for(int b=0;b<8;b++)
+    {
+      if(playershoot==true && shots[b].checkMove()==false)
+      {
+        shots[b].setMove(mouseX,mouseY);
+      }
+      if(shots[b].checkMove()==true)
+      {
+        shots[b].moveShot(mouseX,mouseY);
+      } 
+    }
+    fighting=fightCheck();
+    charMove();
+    roommove();
+    repaint();
+  }
+  public GameScreen()//GameScreen constructor
+  {  
+    addMouseListener(this);
+    addKeyListener(this);
+    setFocusable(true);
+    for(int p=0;p<8;p++)
+    {
+      enemies[p]=new Enemy(); 
+      eshots[p]=new EnemyShot();
+    }
+    for(int o=0;o<5;o++)
+    {
+     bossshots[o]=new EnemyShot(); 
+    }
+  }
+  static boolean fightCheck()//Method which check's if there is fighting
+  {
+   for(int l=0;l<8;l++)
+   {
+    if(enemyhealth[l]>0)
+    {
+     return true; 
+    }
+   }
+   if(bossroom==true && bosshealth>0)
+   {
+    return true; 
+   }
+   return false;
+  }
+  public static void enemyMoves()//Method which moves the enemies
+  {
+    for(int i=0;i<8;i++)
+    {
+      if(enemyX[i]!=0 && enemyY[i]!=0)
+      {
+        enemyX[i]=enemies[i].moveX(enemyX[i],charX);
+        enemyY[i]=enemies[i].moveY(enemyY[i],charY);
+      }
+    }
+  }
+  public static void shotMoves()//Method which moves the enemy shots
+  {
+    for(int b=0;b<8;b++)
+    {
+      if(eshots[b].checkMove()==true && spawn==false)//Checks if the enemy shot b is moving
+      {
+       enemyshotsX[b]=eshots[b].moveShotX(enemyshotsX[b],enemyshotscurX[b]);
+       enemyshotsY[b]=eshots[b].moveShotY(enemyshotsY[b],enemyshotscurY[b]);
+      }
+      if(eshots[b].checkArrive(enemyshotsX[b],enemyshotsY[b],enemyshotscurX[b],enemyshotscurY[b])==true && spawn==false)//Checks if the enemy shot arrived at it's target
+      {
+       enemyshotsX[b]=enemyX[b];
+       enemyshotsY[b]=enemyY[b];
+       enemyshotscurX[b]=eshots[b].setTargetX(charX);
+       enemyshotscurY[b]=eshots[b].setTargetY(charY);
+      }
+    }
+  }
+  public static void bossShots()//Method which moves the boss shots
+  {
+    if(bosshealth>0)
+    {
+      if(bossshots[0].checkMove()==true && bossroom==true)//Checks if the first boss bullet is moving
+      {
+        bossshotsX[0]=bossshots[0].moveShotX(bossshotsX[0],bossshotscurX[0]);
+        bossshotsY[0]=bossshots[0].moveShotY(bossshotsY[0],bossshotscurY[0]);
+        if(bossshots[0].checkArrive(bossshotsX[0],bossshotsY[0],bossshotscurX[0],bossshotscurY[0])==true)//Checks if the boss shot has arrived at its target
+        {
+          bossshotsX[0]=bossX;
+          bossshotsY[0]=bossY;
+          bossshotscurX[0]=charX;
+          bossshotscurY[0]=charY;
+        }
+      }
+      if(bossshots[1].checkMove()==true && bossroom==true)//Checks if the second boss bullet is moving
+      {
+        bossshotsX[1]=bossshots[1].moveShotX(bossshotsX[1],bossshotscurX[1]);
+        bossshotsY[1]=bossshots[1].moveShotY(bossshotsY[1],bossshotscurY[1]);
+        if(bossshots[1].checkArrive(bossshotsX[1],bossshotsY[1],bossshotscurX[1],bossshotscurY[1])==true)//Checks if the boss bullet has arrived at its target
+        {
+          bossshotsX[1]=bossX;
+          bossshotsY[1]=bossY;
+          bossshotscurX[1]=0;
+          bossshotscurY[1]=bossY;
+        }
+      }
+      if(bossshots[2].checkMove()==true && bossroom==true)//Checks if the third boss bullet is moving
+      {
+        bossshotsX[2]=bossshots[2].moveShotX(bossshotsX[2],bossshotscurX[2]);
+        bossshotsY[2]=bossshots[2].moveShotY(bossshotsY[2],bossshotscurY[2]);
+        if(bossshots[2].checkArrive(bossshotsX[2],bossshotsY[2],bossshotscurX[2],bossshotscurY[2])==true)//Checks if the boss bullet has arrived at its target
+        {
+          bossshotsX[2]=bossX;
+          bossshotsY[2]=bossY;
+          bossshotscurX[2]=bossX;
+          bossshotscurY[2]=0;
+        }
+      }
+      if(bossshots[3].checkMove()==true && bossroom==true)//Checks if the fourth boss bullet is moving
+      {
+        bossshotsX[3]=bossshots[3].moveShotX(bossshotsX[3],bossshotscurX[3]);
+        bossshotsY[3]=bossshots[3].moveShotY(bossshotsY[3],bossshotscurY[3]);
+        if(bossshots[3].checkArrive(bossshotsX[3],bossshotsY[3],bossshotscurX[3],bossshotscurY[3])==true)//Checks if the boss bullet has arrived at its target
+        {
+          bossshotsX[3]=bossX;
+          bossshotsY[3]=bossY;
+          bossshotscurX[3]=1200;
+          bossshotscurY[3]=bossY;
+        }
+      }
+      if(bossshots[4].checkMove()==true && bossroom==true)//Checks if the fifth boss bullet is moving
+      {
+        bossshotsX[4]=bossshots[4].moveShotX(bossshotsX[4],bossshotscurX[4]);
+        bossshotsY[4]=bossshots[4].moveShotY(bossshotsY[4],bossshotscurY[4]);
+        if(bossshots[4].checkArrive(bossshotsX[4],bossshotsY[4],bossshotscurX[4],bossshotscurY[4])==true)//Checks if the boss bullet has arrived at its target
+        {
+          bossshotsX[4]=bossX;
+          bossshotsY[4]=bossY;
+          bossshotscurX[4]=bossX;
+          bossshotscurY[4]=800;
+        }
+      }
+    }
+  }
+  public static void bossMoves()//Method which moves the boss
+  {
+    if(bossroom==true && charhealth>0 && bosshealth>0)
+    {
+     if(bossX<charX)
+     {
+      bossX++;
+     }
+     if(bossX>charX)
+     {
+      bossX--; 
+     }
+     if(bossY<charY)
+     {
+      bossY++; 
+     }
+     if(bossY>charY)
+     {
+      bossY--; 
+     }
+    }
+  }
+  public static void heal()//Method which heals the player
+  {
+    if(charhealth<300 && charhealth!=0)
+    {
+      charhealth++;
+    }
+  }
+  public static void bossdetect()//Method which does the bossfight hit detection
+  {
+    if(bossroom==true)
+    {
+      boolean charhit=false;
+      for(int i=0;i<5;i++)
+      {
+        charhit=bossshots[i].checkSpot(charX,charY,bossshotsX[i],bossshotsY[i]);
+        if(charhit==true && charhealth>=50 && bosshealth>0)//runs if everyone is alive and the player is hit
+        {
+          charhealth-=50;
+          charhit=false;
+        }
+        if(charhit==true && charhealth<50 && bosshealth>0)//runs if everyone is alive and the player is hit with less than 50 health
+        {
+          charhealth=0;
+          charhit=false;
+        }
+      }
+      for(int p=0;p<8;p++)
+      {
+       int tempX=shots[p].getX();
+       int tempY=shots[p].getY();
+       if(tempX<bossX+60 && tempX>bossX-10 && tempY>bossY-10 && tempY<bossY+90 && bosshealth>0)//Runs if the player shot is within the hitbox of the boss
+       {
+        bosshealth-=4; 
+        score++;
+       }
+      }
+    }
+  }
+  public static void hitdetect()//Method which does the normal fights hit detection
+  {
+    for(int b=0;b<8;b++)
+    {
+      boolean charhit=false;
+      charhit=eshots[b].checkSpot(charX,charY,enemyshotsX[b],enemyshotsY[b]);
+      if(charhit==true && charhealth>=dmgtoplayer && enemyhealth[b]>0)//Runs if the player is hit and the enemy is alive
+      {
+        charhealth-=dmgtoplayer;
+        charhit=false;
+        shots[b].shotReset(charX,charY);
+      }
+      if(charhit==true && charhealth<dmgtoplayer && enemyhealth[b]>0)//Runs if the player is hit, the enemy is alive and the player has less health than the shot's damage 
+      {
+       charhealth=0;
+       charhit=false;
+       shots[b].shotReset(charX,charY);
+      }
+      for(int u=0;u<8;u++)
+      {
+        int tempX=shots[u].getX();
+        int tempY=shots[u].getY();
+        if(tempX<enemyX[b]+40 && tempX>enemyX[b]-10 && tempY>enemyY[b]-10 && tempY<enemyY[b]+40 && enemyhealth[b]>0)//Runs if the shot is within the enemy hitbox
+        {
+         enemyhealth[b]-=4; 
+         score++;
+        }
+      }
+    }
+  }                     
+  public void paintComponent(Graphics g)//paintComponent method
+  {
+    super.paintComponent(g);
+    if(first==0)
+    {
+      for(int i=0;i<8;i++)
+      {
+        shots[i]=new PlayerShot();
+      }
+      first=1;
+    }
+    charmover.start();
+    enemymover.start();
+    hitdetection.start();
+    healhim.start();
+    bossrun.start();
+    if(frontmenu==true)//Draws the front menu screen
+    {
+      remove(Over);
+      remove(MainMenu);
+      charhealth=300;
+      bosshealth=2000;
+      charX=578;
+      charY=395;
+      for(int y=0;y<8;y++)//Sets the spot of the enemy shots
+      {
+       enemyX[y]=-100;
+       enemyY[y]=-100;
+       enemyshotsX[y]=-100;
+       enemyshotsY[y]=-100;
+       enemyshotscurX[y]=-100;
+       enemyshotscurY[y]=-100;
+      }
+      win=false;
+      spawn=true;
+      bossroom=false;
+      Color maroon=new Color(144,18,18);
+      setBackground(maroon);
+      int run=drawBackground(1200,800,0,0,g,go);
+      g.setColor(Color.WHITE);
+      g.fillRect(550,375,100,50);
+      add(title);
+      add(start);
+      add(instruct);
+      title.setVisible(true);
+      title.setForeground(Color.WHITE);
+      title.setBounds(470,100,250,150);
+      start.setVisible(true);
+      start.setForeground(Color.BLACK);
+      start.setBounds(576,376,100,50);
+      start.setFont(new Font("Arial",Font.BOLD,20));
+      title.setFont(new Font("Arial",Font.BOLD,30));
+    }
+    if(maingame==true)//Draws the main game screen
+    {
+      remove(title);
+      remove(start);
+      Color maroon=new Color(144,18,18);
+      setBackground(maroon);
+      int run=drawBackground(1200,800,0,0,g,go);
+      if(charhealth>0)//Runs if the player is alive
+      {
+      drawPlayer(g);
+      }
+      if(charhealth==0)//Runs if the player dies
+      {
+       maingame=false;
+       score=0;
+       gameover=true;
+       roomscleared=0;
+      }
+      if(bosshealth<=0)//Runs if the boss dies
+      {
+        win=true;
+        score=0;
+        roomscleared=0;
+        maingame=false;
+      }
+      add(scores);
+      showX.setVisible(true);
+      showY.setVisible(true);
+      mouseX2.setVisible(true);
+      mouseY2.setVisible(true);
+      scores.setVisible(true);
+      showX.setForeground(Color.WHITE);
+      showY.setForeground(Color.WHITE);
+      mouseX2.setForeground(Color.WHITE);
+      mouseY2.setForeground(Color.WHITE);
+      scores.setForeground(Color.WHITE);
+      showX.setBounds(100,100,100,50);
+      showY.setBounds(100,200,100,50);
+      mouseX2.setBounds(100,300,100,50);
+      mouseY2.setBounds(100,400,100,50);
+      scores.setBounds(500,700,200,50);
+      showX.setText("charX "+charX);
+      showY.setText("charY "+charY);
+      mouseX2.setText("mouseX "+mouseX);
+      mouseY2.setText("mouseY "+mouseY);
+      scores.setFont(new Font("Arial",Font.BOLD,20));
+      scores.setText("Score "+score);
+      for(int f=0;f<8;f++)
+      {
+        if(shots[f].checkSpot(charX,charY)==false && fighting==true && charhealth>0)//Runs if the player is alive and the player shot is not on the player
+        {
+          shots[f].drawShot(g,charX,charY); 
+        }
+        if(enemyX[f]!=0 && enemyY[f]!=0 && enemyhealth[f]>0 && charhealth>0)//Runs if the enemy is not in the top left corner and the player is alive
+        {
+        enemies[f].drawEnemy(g,enemyX[f],enemyY[f],enemyhealth[f]);
+        }
+        if(eshots[f].checkMove()==true && enemyhealth[f]>0 && charhealth>0)//Runs if the enemy shot is moving and the enemy is not dead
+        {
+         eshots[f].drawShot(g,enemyshotsX[f],enemyshotsY[f]);
+        }
+      }
+      if(bossroom==true)//Draws the boss room screen
+      {
+        if(bosshealth>0 && charhealth>0)//Runs if the player and boss is alive
+        {
+        drawBoss(g,bossX,bossY);
+        }
+        for(int o=0;o<5;o++)
+        {
+          if(bosshealth>0)//Runs if the boss is alive
+          {
+            bossshots[o].drawShot(g,bossshotsX[o],bossshotsY[o]); 
+          }
+        }
+      }
+    }
+    if(win==true)//Draws the win screen
+    {
+      remove(score);
+      add(Over);
+      add(MainMenu);
+      dmgtoplayer=20;
+      fighting=false;
+      for(int i=0;i<8;i++)
+      {
+       enemyhealth[i]=0; 
+      }
+      bosshealth=0;
+      Over.setVisible(true);
+      MainMenu.setVisible(true);
+      Over.setFont(new Font("Arial",Font.BOLD,40));
+      MainMenu.setFont(new Font("Arial",Font.BOLD,20));
+      Over.setText("You win!");
+      Over.setForeground(Color.WHITE);
+      MainMenu.setForeground(Color.BLACK);
+      Over.setBounds(520,200,1000,150);
+      MainMenu.setBounds(560,350,1000,150);
+      g.setColor(Color.WHITE);
+      g.fillRect(537,400,150,50);
+    }
+    if(gameover==true)//Draws the game over screen
+    {
+      remove(score);
+      add(Over);
+      add(MainMenu);
+      dmgtoplayer=20;
+      fighting=false;
+      for(int i=0;i<8;i++)
+      {
+       enemyhealth[i]=0; 
+      }
+      bosshealth=0;
+      Over.setVisible(true);
+      MainMenu.setVisible(true);
+      Over.setFont(new Font("Arial",Font.BOLD,40));
+      MainMenu.setFont(new Font("Arial",Font.BOLD,20));
+      Over.setForeground(Color.WHITE);
+      MainMenu.setForeground(Color.BLACK);
+      Over.setBounds(500,200,1000,150);
+      MainMenu.setBounds(560,350,1000,150);
+      g.setColor(Color.WHITE);
+      g.fillRect(537,400,150,50);
+    }
+  }
+  public void drawBoss(Graphics g,int bossX,int bossY)//Method which draws the boss
+  {
+    g.setColor(Color.BLACK);
+    g.fillRect(bossX,bossY,50,80);
+    g.setColor(Color.RED);
+    g.fillRect(bossX,bossY-40,50,40);
+    g.fillRect(bossX-25,bossY,25,50);
+    g.fillRect(bossX+50,bossY,25,50);
+    g.fillRect(bossX,bossY+80,20,40);
+    g.fillRect(bossX+30,bossY+80,20,40);
+    g.setColor(Color.WHITE);
+    g.fillRect(bossX+10,bossY-35,10,10);
+    g.fillRect(bossX+30,bossY-35,10,10);
+    g.setColor(Color.GRAY);
+    g.fillRect(270,50,(int)2000/3,40);
+    g.setColor(Color.GREEN);
+    g.fillRect(270,50,(int)bosshealth/3,40);
+  }
+  public int drawBackground(int pageW,int pageH,int curX,int curY,Graphics g,int run)//Method which draws the background recursively
+  {
+   if(curX==pageW && curY==pageH)//Returns run if the current X and Y reachs the page W and H
+   {
+    return run; 
+   }
+   g.setColor(Color.BLACK);
+   g.fillRect(curX,0,20,800);
+   g.fillRect(0,curY,1200,20);
+   if(curX<pageW)
+   {
+    curX+=100;
+   }
+   if(curY<pageH)
+   {
+    curY+=100; 
+   }
+   run=drawBackground(pageW,pageH,curX,curY,g,run);
+   return run;
+  }
+  public void roommove()//Method which moves the player from room to room
+  {
+   if(fighting==false && charX<5)//Runs if fighting is not happening and the character is to the left of the screen
+   {
+    charX=1170;
+    roomscleared+=1;
+    dmgtoplayer+=2;
+    spawn=false;
+    enemySetter();
+    charhealth=300;
+   }
+   if(fighting==false && charX>1170)//Runs if fighting is not happening and the character is to the right of the screen
+   {
+    charX=5; 
+    roomscleared+=1;
+    dmgtoplayer+=2;
+    spawn=false;
+    enemySetter();
+    charhealth=300;
+   }
+   if(fighting==false && charY<5)//Runs if fighting is not happening and the character is to the top of the screen
+   {
+    charY=730; 
+    roomscleared+=1;
+    dmgtoplayer+=2;
+    spawn=false;
+    enemySetter();
+    charhealth=300;
+   }
+   if(fighting==false && charY>731)//Runs if fighting is not happening and the character is to the bottom of the screen
+   {
+    charY=4; 
+    roomscleared+=1;
+    dmgtoplayer+=2;
+    spawn=false;
+    enemySetter();
+    charhealth=300;
+   }
+  }
+  public void charMove()//Method which moves the character
+  {
+    if(right==true && charX<1173)
+    {
+      charX+=5; 
+    }
+    if(left==true && charX>4)
+    {
+      charX-=5; 
+    }
+    if(up==true && charY>4)
+    {
+      charY-=5; 
+    }
+    if(down==true && charY<732)
+    {
+      charY+=5; 
+    } 
+  }
+  void enemySetter()//Method which sets up the enemies
+  {
+    if(roomscleared==8)//Runs if rooms cleared is eight
+    {
+     bossroom=true; 
+    }
+    for(int k=0;k<8;k++)
+    {
+      if(bossroom==false)//Sets up the normal ones
+      {
+      enemyhealth[k]=100;
+      enemyX[k]=enemies[k].spotSetX();
+      enemyY[k]=enemies[k].spotSetY();
+      enemyshotsX[k]=enemyX[k];
+      enemyshotsY[k]=enemyY[k];
+      eshots[k].setMove();
+      enemyshotscurX[k]=eshots[k].setTargetX(charX);
+      enemyshotscurY[k]=eshots[k].setTargetY(charY);
+      }
+    }
+    if(bossroom==true)//Sets up the boss
+    {
+      charhealth=300;
+      bosshealth=2000;
+      bossX=600;
+      bossY=350;
+      for(int i=0;i<5;i++)
+      {
+       bossshotsX[i]=bossX;
+       bossshotsY[i]=bossY;
+       bossshots[i].setMove();
+      }
+      bossshotscurX[0]=charX;
+      bossshotscurY[0]=charY;
+      bossshotscurX[1]=0;
+      bossshotscurY[1]=bossY;
+      bossshotscurX[2]=bossX;
+      bossshotscurY[2]=0;
+      bossshotscurX[3]=1200;
+      bossshotscurY[3]=bossY;
+      bossshotscurX[4]=bossX;
+      bossshotscurY[4]=800;
+    }
+  }
+  void drawPlayer(Graphics g)//Method which draws the player
+  {
+      Color silverish=new Color(230,231,238);
+      Color blueish=new Color(22,70,229);
+      Color redish=new Color(252,10,10);
+      g.setColor(blueish);
+      g.fillRect(charX+5,charY,20,25);
+      g.setColor(silverish);
+      g.fillRect(charX+10,charY+4,10,12);
+      g.setColor(Color.BLACK);
+      g.fillRect(charX+5,charY+25,6,15);
+      g.fillRect(charX+19,charY+25,6,15);
+      g.setColor(silverish);
+      g.fillRect(charX-1,charY,6,20);
+      g.fillRect(charX+25,charY,6,20);
+      g.setColor(Color.BLACK);
+      g.fillRect(charX+5,charY-18,20,18);
+      g.setColor(redish);
+      g.setColor(Color.WHITE);
+      g.fillOval(charX+10,charY-13,10,4);
+      g.setColor(Color.GRAY);
+      g.fillRect(860,710,300,30);
+      g.setColor(Color.GREEN);
+      g.fillRect(860,710,charhealth,30);
+  }
+  public void mouseExited(MouseEvent e)//Method which triggers when mouse exited
+  {
+  }
+  public void mouseEntered(MouseEvent e)//Method which triggers when mouse entered
+  {
+  }
+  public void mouseReleased(MouseEvent e)//Method which triggers when mouse released
+  {
+    if(maingame==true)
+    {
+      playershoot=false; 
+    }
+  }
+  public void mousePressed(MouseEvent e)//Method which triggers when mouse pressed
+  {
+    mouseX=e.getX();
+    mouseY=e.getY();
+    if(maingame==true)
+    {
+      playershoot=true;
+    }
+  }
+  public void mouseClicked(MouseEvent e)//Method which triggers when mouse clicked
+  {
+    mouseX=e.getX();
+    mouseY=e.getY();
+    if(frontmenu==true && mouseX>550 && mouseX<650 && mouseY>375 && mouseY<425)//Runs if the player clicks on the game start button
+    {
+      frontmenu=false;
+      maingame=true;
+    }
+    if(gameover==true && mouseX>537 && mouseX<687 && mouseY>400 && mouseY<450)//Runs if the player clicks on the return to main menu button
+    {
+     gameover=false;
+     frontmenu=true;
+    }
+    if(win==true && mouseX>537 && mouseX<687 && mouseY>400 && mouseY<450)//Runs if the player clicks on the return to main menu button
+    {
+     win=false;
+     frontmenu=true;
+    }
+  }
+  public void keyTyped(KeyEvent e)//Method which triggers when key typed
+  {
+    
+  }
+  public void keyPressed(KeyEvent e)//Method which triggers when key pressed
+  {
+    if(e.getKeyCode()==KeyEvent.VK_D)
+    {
+      right=true; 
+    } else 
+      if(e.getKeyCode()==KeyEvent.VK_A)
+    {
+      left=true; 
+    } else 
+      if(e.getKeyCode()==KeyEvent.VK_W)
+    {
+      up=true; 
+    } else 
+      if(e.getKeyCode()==KeyEvent.VK_S)
+    {
+      down=true; 
+    }
+  }
+  public void keyReleased(KeyEvent e)//Method which triggers when key released
+  {
+    if(e.getKeyCode()==KeyEvent.VK_D)
+    {
+      right=false; 
+    }
+    if(e.getKeyCode()==KeyEvent.VK_A)
+    {
+      left=false; 
+    }
+    if(e.getKeyCode()==KeyEvent.VK_W)
+    {
+      up=false; 
+    }
+    if(e.getKeyCode()==KeyEvent.VK_S)
+    {
+      down=false; 
+    }
+  }
+}
+class PlayerShot//Class which is the player shot object
+{
+  private static int shotX=0;
+  private static int shotY=0;
+  private static int mouseX=0;
+  private static int mouseY=0;
+  private boolean moving=false;
+  private static boolean firstshot=true;
+  PlayerShot()//PlayerShot constructor
+  {
+  }
+  void drawShot(Graphics g, int charX,int charY)//Method which draws the shot
+  {
+    if(moving==false)
+    {
+     shotX=charX;
+     shotY=charY;
+    }
+    if(moving==true)
+    {
+    g.setColor(Color.WHITE);
+    g.fillRect(shotX,shotY,10,10);
+    }
+  }
+  int getX()//Method which gets the shotX
+  {
+   return shotX;
+  }
+  int getY()//Method which get the shotY
+  {
+   return shotY; 
+  }
+  void setSpot(int charX,int charY)//Method which sets the shotX and shotY
+  {
+   shotX=charX;
+   shotY=charY;
+  }
+  void setMove(int curmouseX,int curmouseY)//Method which sets where to move
+  {
+   mouseX=curmouseX;
+   mouseY=curmouseY;
+   moving=true;
+  }
+  boolean checkMove()//Method which checks if it is moving
+  {
+   if(moving==false)
+   {
+    return false; 
+   } else return true;
+  }
+  boolean checkSpot(int charX,int charY)//Method which checks if it is at the character
+  {
+    if(charX==shotX && charY==shotY)
+    {
+     return true;
+    } else return false;
+  }
+  void shotReset(int charX,int charY)//Method which resets the shot
+  {
+   shotX=charX;
+   shotY=charY;
+  }
+  void moveShot(int curmouseX,int curmouseY)//Method which moves the shot
+  {
+    if(moving==false)
+    {
+     mouseX=curmouseX;
+     mouseY=curmouseY;
+    }
+    if(shotX>mouseX)
+    {
+      shotX-=1;
+    }  
+    if(shotX<mouseX)
+    {
+      shotX+=1;
+    } 
+    if(shotY>mouseY)
+    {
+      shotY-=1; 
+    } 
+    if(shotY<mouseY)
+    {
+      shotY+=1; 
+    }
+    if(shotX==mouseX && shotY==mouseY)//Runs if the shot reaches it's target
+    {
+      moving=false;
+    }
+  }
+}
+class Enemy//Class which is the enemy object
+{
+  Enemy()//Enemy constructor
+  {
+  }
+  int spotSetX()//Method which sets the enemyX
+  {
+    int enemyX=(int)(Math.random()*800)+200;
+    System.out.println(enemyX);
+    return enemyX;
+  }
+  int spotSetY()//Method which sets the enemyY
+  {
+    int enemyY=(int)(Math.random()*400)+200; 
+    System.out.println(enemyY);
+    return enemyY;
+  }
+  void drawEnemy(Graphics g,int enemyX,int enemyY,int health)//Method which draws the enemy
+  {
+    g.setColor(Color.RED);
+    g.fillRect(enemyX+5,enemyY,20,25);
+    g.setColor(Color.RED);
+    g.fillRect(enemyX+5,enemyY+25,6,15);
+    g.fillRect(enemyX+19,enemyY+25,6,15);
+    g.setColor(Color.BLACK);
+    g.fillRect(enemyX-1,enemyY,6,20);
+    g.fillRect(enemyX+25,enemyY,6,20);
+    g.setColor(Color.RED);
+    g.fillRect(enemyX+5,enemyY-18,20,18);
+    g.setColor(Color.YELLOW);
+    g.fillRect(enemyX+8,enemyY-13,4,4);
+    g.fillRect(enemyX+18,enemyY-13,4,4);
+    g.setColor(Color.GRAY);
+    g.fillRect(enemyX-1,enemyY-40,33,10);
+    g.setColor(Color.GREEN);
+    g.fillRect(enemyX-1,enemyY-40,(int)health/3,10);
+  }
+  int moveX(int spotX,int charX)//Method which moves the enemyX
+  {
+   if(spotX>charX+40)
+   {
+    spotX-=1; 
+   }
+   if(spotX<charX-40)
+   {
+    spotX+=1; 
+   }
+   return spotX;
+  }
+  int moveY(int spotY,int charY)//Method which moves the enemyY
+  {
+    if(spotY>charY+40)
+    {
+     spotY-=1; 
+    }
+    if(spotY<charY-40)
+    {
+     spotY+=1; 
+    }
+    return spotY;
+  }
+}
+class EnemyShot//class which is the enemy shot object
+{
+  private boolean moving=false;
+  private static int curX=0;
+  private static int curY=0;
+  EnemyShot()//EnemyShot constructor
+  {
+  }
+  void drawShot(Graphics g, int shotX,int shotY)//Method which draws the enemy shot
+  {
+    g.setColor(Color.ORANGE);
+    g.fillRect(shotX,shotY,20,20);
+    g.setColor(Color.RED);
+    g.fillRect(shotX+5,shotY+5,10,10);
+  }
+  void setMove()//Method which sets moving to true
+  {
+   moving=true;
+  }
+  int setTargetX(int charX)//Method which sets the targetX
+  {
+   curX=charX;
+   return curX;
+  }
+  int setTargetY(int charY)//Method which the targetY
+  {
+   curY=charY;
+   return curY;
+  }
+  boolean checkMove()//Method which checks if it is moving
+  {
+   if(moving==false)
+   {
+    return false; 
+   } else return true;
+  }
+  boolean checkArrive(int shotX,int shotY,int curX,int curY)//Method which checks if the shot arrived at its target
+  {
+    if(curX==shotX && curY==shotY)//Runs if the shot's X and Y is at it's target X and Y
+    {
+     return true; 
+    } else return false;
+  }
+  boolean checkSpot(int charX,int charY,int shotX,int shotY)//Method which checks if the shot hits the player
+  {
+    boolean contact=false;
+    if(shotX>charX-20 && shotX<charX+50 && shotY>charY-20 && shotY<charY+50)//Runs if the shot is in the player hit box
+    {
+      contact=true;
+    }
+    return contact;
+  }
+  int moveShotX(int shotX,int curX)//Method which moves the shotX
+  {
+    if(shotX>curX)
+    {
+      shotX-=1;
+    }  
+    if(shotX<curX)
+    {
+      shotX+=1;
+    } 
+    return shotX;
+  }
+  int moveShotY(int shotY,int curY)//Method which moves the shotY
+  {
+    if(shotY>curY)
+    {
+      shotY-=1; 
+    } 
+    if(shotY<curY)
+    {
+      shotY+=1; 
+    } 
+    return shotY;
+  }
+}
